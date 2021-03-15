@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing app</title>
+    <style>
+        canvas {
+            border-style: solid;
+        }
+    </style>
+</head>
+<body>
+    <canvas class="my-canvas"></canvas>
+    <p class="real-time-mouse-coordinates"></p>
+    <button class="line">line</button>
+    <button class="rect">rectangle</button>
+    <script>
+        //globals
+        let mycanvas, ctx;
+        var dragging = false, dragStartLoc, snapshot;
+
+        function init(){
+            mycanvas = document.querySelector("canvas");
+            mouse_location_viewer = document.querySelector("p");
+            resize_canvas();
+            ctx = mycanvas.getContext("2d");
+            mycanvas.addEventListener('mousedown', dragStart, false);
+            mycanvas.addEventListener('mousemove', drag, false);
+            mycanvas.addEventListener('mouseup', dragStop, false);
+
+            //show real-time mouse co-ordinates
+            mycanvas.addEventListener("mousemove", (evnt) => {
+                const mouse_coordinates = getMousePositionOnCanvas(evnt);
+                mouse_location_viewer.innerText = `x: ${mouse_coordinates .x}, y: ${mouse_coordinates .y}`;
+            }, false);
+        }
+
+        function getMousePositionOnCanvas(evnt){
+            return {x: evnt.clientX, y: evnt.clientY};  
+        }
+
+        function resize_canvas(){
+            mycanvas.height = window.innerHeight - 60;
+            mycanvas.width = window.innerWidth - 35;            
+        }
+
+        function takeSnapshot() {
+            snapshot = ctx.getImageData(0, 0, mycanvas.width, mycanvas.height);
+        }
+
+        function restoreSnapshot() {
+            ctx.putImageData(snapshot, 0, 0);
+        }
+
+        function dragStart(evnt) {
+            dragging = true;
+            dragStartLocation = getMousePositionOnCanvas(evnt);
+            takeSnapshot();
+        }
+
+        function drag(evnt) {
+            var position;
+            if (dragging == true) {
+                restoreSnapshot();
+                position = getMousePositionOnCanvas(evnt);
+                drawRect(position);
+            }
+        }
+
+        function dragStop(evnt) {
+            dragging = false;
+            restoreSnapshot();
+            var position = getMousePositionOnCanvas(evnt);
+            drawRect(position);
+        }
+
+        //draw shapes
+        function drawRect(p){
+            var rectWidth = p.x - dragStartLocation.x;
+            var rectHeight = p.y - dragStartLocation.y;
+            ctx.beginPath();
+            ctx.rect(dragStartLocation.x, dragStartLocation.y, rectWidth, rectHeight);
+            ctx.stroke();
+        }
+        
+        window.addEventListener('load', init, false);
+        window.addEventListener('resize', resize_canvas, false);
+    </script>
+</body>
+
+</html>
