@@ -18,14 +18,26 @@
     <button class="rect">rectangle</button>
     <script>
         //globals
-        let mycanvas, ctx;
-        var dragging = false, dragStartLoc, snapshot;
+        let mycanvas, ctx, dragging = false, dragStartLoc, snapshot, drawingtool;
 
         function init(){
             mycanvas = document.querySelector("canvas");
             mouse_location_viewer = document.querySelector("p");
-            resize_canvas();
+            //canvas properties
             ctx = mycanvas.getContext("2d");
+            resize_canvas();
+
+            //add selecting tools here
+                //line
+            document.querySelector(".line").addEventListener('click', () => {
+                drawingtool = "line";
+            }, false)
+                //rectangle
+            document.querySelector(".rect").addEventListener('click', () => {
+                drawingtool = "rect";
+            }, false)
+
+            //events
             mycanvas.addEventListener('mousedown', dragStart, false);
             mycanvas.addEventListener('mousemove', drag, false);
             mycanvas.addEventListener('mouseup', dragStop, false);
@@ -42,8 +54,10 @@
         }
 
         function resize_canvas(){
+            takeSnapshot();
             mycanvas.height = window.innerHeight - 60;
-            mycanvas.width = window.innerWidth - 35;            
+            mycanvas.width = window.innerWidth - 35;          
+            restoreSnapshot();  
         }
 
         function takeSnapshot() {
@@ -61,11 +75,10 @@
         }
 
         function drag(evnt) {
-            var position;
             if (dragging == true) {
                 restoreSnapshot();
                 position = getMousePositionOnCanvas(evnt);
-                drawRect(position);
+                draw(position);
             }
         }
 
@@ -73,16 +86,36 @@
             dragging = false;
             restoreSnapshot();
             var position = getMousePositionOnCanvas(evnt);
-            drawRect(position);
+            draw(position);
+        }
+
+        function draw(position){
+            ctx.beginPath();
+            //what to draw
+            switch(drawingtool){
+                case "rect":
+                    rectangle(position);
+                    break;
+                case "line":
+                    line(position);
+                    break;
+                default:
+                    rectangle(position);
+                        break;
+            }
+            ctx.stroke();
         }
 
         //draw shapes
-        function drawRect(p){
+        function rectangle(p){
             var rectWidth = p.x - dragStartLocation.x;
             var rectHeight = p.y - dragStartLocation.y;
-            ctx.beginPath();
             ctx.rect(dragStartLocation.x, dragStartLocation.y, rectWidth, rectHeight);
-            ctx.stroke();
+        }
+
+        function line(position) {
+            ctx.moveTo(dragStartLocation.x, dragStartLocation.y);
+            ctx.lineTo(position.x, position.y);
         }
         
         window.addEventListener('load', init, false);
